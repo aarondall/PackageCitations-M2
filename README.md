@@ -10,7 +10,7 @@
 # PackageCitations-M2
 a Macaulay2 software package for obtaining bibtex entries for Macaulay2 packages
 
-The following is, as of 2015 04 05, slightly outdated. A new `README` will be ready in short order.
+The following is, as of 2015 04 05, slightly outdated. A new `README` will be ready in short order. For the time being see the proof of concept pdf [here](https://github.com/aarondall/PackageCitations-M2/blob/master/proofOfConcept/testCite.pdf).
 
 <a name="functionality"></a>
 ## Functionality ##
