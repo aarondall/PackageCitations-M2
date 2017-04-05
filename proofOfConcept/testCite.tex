@@ -1,0 +1,50 @@
+\documentclass[11pt]{article}
+% \usepackage{cite}
+\usepackage{hyperref}
+\begin{document}
+
+\title{Citing \texttt{Macaulay2} Packages}
+\author{Aaron Dall}
+\date{\today}
+\maketitle
+
+The \texttt{PackageCitations}~\cite{PackageCitationsSource} package for \texttt{Macaulay2}~\cite{M2} gives the user a quick method for producing a \texttt{bibtex} entry of any Macaulay2 package for inclusion in the bibliography of a \LaTeX~document. The \texttt{cite} method works ``out of the box'' on all packages with the following caveats and exceptions.
+
+\begin{enumerate}
+	\item \textbf{No Authors}: The packages \texttt{Style}~\cite{StyleSource} and \texttt{Text}~\cite{TextSource} have no credited authors and so, in turn, neither do their references. Applying \texttt{cite} to either of these packages yields a citation with an empty \texttt{author} tag and a printed warning similar~to
+	\begin{verbatim}
+	Warning: The "Text" package provides insufficient cit-
+	ation data: author.
+	\end{verbatim}
+	Package writers are encouraged to give data for at least one author of the package.
+
+	\item \textbf{Authors and Contributors}: There are a number of packages that slightly abuse the \texttt{Authors} key in their option table by listing certain people as ``contributors''. The \texttt{cite} method ignores contributing authors for the time being. See, e.g.,~\cite{VisualizeSource,GraphsSource,GraphicsSource,PHCpackSource}. It might be a good idea to encourage package writers to only list authors that should appear on the citation in the option table and to credit contributors in the documentation of the package.
+
+	\item \textbf{Titles for source code}: For a package \texttt{Foo}, the \texttt{cite} method attempts to make a reasonable title from the package name and headline. We call the headline \texttt{H} of \texttt{Foo} \emph{good} if it satisfies each of the following properties:
+		\begin{itemize}
+			\item \texttt{H} consists of at least one word and at most ten words;
+			\item \texttt{H} does not contain a colon;
+			\item \texttt{H} is not \texttt{Foo} nor some slight variation of it.
+		\end{itemize}
+	If \texttt{H} satisfies these properties then the title given in the citation will be \texttt{Foo: H}. See, e.g.,~\cite{PackageCitationsSource}. Otherwise the title will be the more generic \texttt{Foo: A} \emph{Macaulay2} \texttt{package}. See, e.g.,~\cite{PieriMapsSource}. The \texttt{cite} method can handle quotes (see, e.g.,~\cite{BrunsSource}) and will transform any occurrence of the string ``Macaulay2'' into $\emph{Macaulay2}$. Moreover, the tex string in~\cite{HodgeIntegralsArticle} is handled properly. However, package writers might be encouraged to avoid using quotes and tex strings in their package headlines as a general rule.
+
+	\item \textbf{No link to source}: It is possible that, by oversight or policy, an external \texttt{Macaulay2} package \texttt{Foo} can provide no link to its source code. See, e.g.,~\cite{MatroidsSource}. In this case \texttt{cite} returns a partial citation and issues the warning:
+	\begin{verbatim}
+	Warning: The "Foo" package provides insufficient citation
+	data: howpublished.
+	\end{verbatim}
+
+	\item \textbf{Certified Packages}: For \emph{certified} Macaulay2 packages, the method \texttt{cite} gives two citations: one for the version of the source code being used, and one for the journal article certifying the package. See, for example,~\cite{QuillenSuslinSource,QuillenSuslinArticle} or~\cite{PolyhedraSource,PolyhedraArticle}.
+
+	\item \textbf{Diacritics}: The following collection of diacritics are handled properly by the method \texttt{cite}: \'a, \aa, \ae, \`e, \'e, \`o, \o. See, e.g.,~\cite{PolyhedraSource,LatticePolytopesSource,Schubert2Source}. These are all that are needed for \texttt{cite} to work with the \texttt{Macaulay2} packages presently available but may need to be extended in the future.
+
+	\item \textbf{Suspected Typos}: The \texttt{cite} method makes no attempts to rectify typographical errors in the data provided by the source code. The user has been warned. For possible typos in titles see, e.g.,~\cite{BrunsSource,HigherCIOperatorsSource,MarkovSource}. For possible typos in version numbers see~\cite{DivisorSource}.
+
+	\item \textbf{Miscellaneous Bugs}: The string ``Macaulay 2'' in the citation of the \texttt{LexIdeals} package~\cite{LexIdealsSource} should be $\emph{Macaulay2}$.
+\end{enumerate}
+
+
+\nocite{*}
+\bibliography{testCite}{}
+\bibliographystyle{plain}
+\end{document}
