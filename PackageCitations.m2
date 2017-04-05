@@ -24,28 +24,48 @@
 --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 --
---  Release 0.1 (2017 03)
+--  Release 0.1 (2017 04)
 --      NEW:
 --          A method for obtaining a bibtex citation for a Macaulay2 package.
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 newPackage (
     "PackageCitations",
     Version => "0.1", 
-    Date => "2017 03 28",
-    Authors => {{
-        Name => "Aaron Dall",
-        Email => "aaronmdall -at- gmail.com",
-        HomePage => "https://www.aarondall.com"}},
+    Date => "2017 04 05",
+    Authors => {{Name => "Aaron Dall", Email => "aaronmdall -at- gmail.com", HomePage => "https://www.aarondall.com"}},
     Headline => "A Macaulay2 software package facilitating citation of Macaulay2 packages",
-    DebuggingMode => false,
+    DebuggingMode => true,
     HomePage => "https://github.com/aarondall/PackageCitations-M2"
     )
 
-export {"cite"}
+export {
+    "cite"
+    --"hasGoodHeadline",  -- internal method
+    --"quotesToTex",  -- internal method
+    --"wrapTexStrings",  -- internal method
+    --"headlineToTex" -- internal method
+    }
+
+-- store for the TeX equivalent of needed diacritics and symbols
+-- add symbols as needed
+-- note that the length of a diacritic (as a string in M2) is 2
+texStore = hashTable {
+    ///Macaulay2///     => ///\emph{Macaulay2}///,
+    ///Mbar_\{g,n\}///    => ///$Mbar_{g,n}$///,
+    ///á///             => ///{\'a}///,
+    ///å///             => ///{\aa}///,
+    ///æ///             => ///{\ae}///,
+    ///è///             => ///{\`e}///,
+    ///é///             => ///{\'e}///,
+    ///ò///             => ///{\`o}///,
+    ///ø///             => ///{\o}///,
+}
+
+-- PREPARE THE HEADLINE FOR USE IN THE BIBTEX TITLE
 
 -- an internal method for checking if a package headline is a good candidate for use in the citation title
 -- a good package headline satisfies the following conditions
---  (1) is 10 words or fewer,
+--  (1) is n words with 0 < n <= 10,
 --  (2) is not a repeat of the title, and
 --  (3) does not contain a colon
 hasGoodHeadline = method (TypicalValue => Boolean)
@@ -53,12 +73,14 @@ hasGoodHeadline Package := P -> (
     T := P#"title";
     H := P#Options#Headline;
     -- check for a colon in the headline
-    if regex(":", H) =!= null then false else
+    if regex(":", H) =!= null then return false else
     -- check length of headline
     L := separate (" ", H);
-    if #L > 10 then false else
+    if #L == 0 or #L > 10 then return false else
     -- check for nontrivial headline content
-    -- first list each word of headline with first letter removed
+    --first check if title and headline are identical
+    if T === H then return false else
+    -- then list each word of headline with first letter removed
     reducedHeadline := apply (L, w -> substring (w, 1, #w));
     -- list each word (starting with an upper case letter) of title with first letter removed
     reducedTitle := delete("" ,separate(" ", replace ("[[:upper:]]", " ", T)));
@@ -72,44 +94,87 @@ hasGoodHeadline Package := P -> (
                 characters reducedTitle#i,
                 characters reducedHeadline#i)
             )
-        then false
-    else true
+        then return false
+    else return true
     )
 
+-- method for converting pairs " " of quotes to latex style `` " 
+quotesToTex = method (TypicalValue => String)
+quotesToTex String := S -> (
+    quoteLocations := select (#characters S, i -> (characters S)#i == "\"");
+    charS := characters S;
+    i := 0;
+    while i < #quoteLocations do (
+        if even i 
+            then (
+                charS = replace (quoteLocations#i, ///``///, charS),
+                i = i+1;)
+        else charS=charS, i = i+1);
+    concatenate charS
+    )
 
--- the cite method
-cite = method (TypicalValue => String)
-cite Package := P -> (
-    T := P#"title";
+wrapTexStrings = method (TypicalValue => String)
+wrapTexStrings String := S -> (
+    k := # texStore;
+    i := 0;
+    while i < k do (
+        S = replace ((keys texStore)#i,texStore#((keys texStore)#i), S); 
+        i =i+1;
+        );
+    S    
+)
+
+headlineToTex = method (TypicalValue => String)
+headlineToTex Package := P -> (
+    if not hasGoodHeadline P then return ///A \emph{Macaulay2} package/// else
+    rawH := P#Options#Headline; -- package headline unprocessed
+    wrapTexStringsH := wrapTexStrings rawH;
+    removeEndStopH := 
+        if wrapTexStringsH#-1 == "." 
+            then concatenate apply (#wrapTexStringsH-1, i-> wrapTexStringsH#i ) 
+        else wrapTexStringsH;
+    repairQuotesH :=  quotesToTex removeEndStopH;
+    repairQuotesH
+    )
+
+-- THE ICITE METHOD --
+iCite = method (TypicalValue => String)
+iCite Package := P -> (
+    T := P#"title"; -- package title
+    V := concatenate("Version~", P#Options#Version); -- package version
     isInternalPackage := member(T, separate (" ", version#"packages"));
-    --isInternalSource := substring (0,46, P#"source directory") === prefixDirectory | currentLayout#"packages";
     isInternalSource := P#"source directory" === prefixDirectory | currentLayout#"packages";
     certificationInfo := if P#Options#Certification =!= null then hashTable P#Options#Certification else null;
     -- bibtex author content
-    packageAuthors := apply(P#Options#Authors, a -> a#0#1);
-    bibPackageAuthors := demark (" and ", packageAuthors);
-    if packageAuthors === {}
-        then print concatenate ("Warning: no authors associated with package", T)
+    if not P#Options#?Authors 
+        then  print concatenate ("Warning: The \"", T, "\" package provides insufficient citation data: author.")
     else
-    -- set up bibtex string for certified packages: easy
-    if certificationInfo =!= null
-        then (
-            bibYear := substring ((regex ("[[:digit:]]{4}", certificationInfo#"acceptance date"))#0, certificationInfo#"acceptance date");
-            return concatenate (
-                "@article{", T, ",\n",
-                    concatenate ("  title = {", certificationInfo#"article title", "},\n"),
-                    concatenate ("  author = {", bibPackageAuthors, "},\n"), -- authors
-                    concatenate ("  journal = {", certificationInfo#"journal name", "}\n"),
-                    concatenate ("  volume = {", certificationInfo#"volume number", "},\n"),
-                    concatenate ("  year = {",  bibYear, "},\n"),
-                "}\n"))
-            else
-    -- set up bibtex string for uncertified packages
+    packageAuthorsWithContributors := apply(P#Options#Authors, a -> a#0#1);
+    packageAuthors := select (packageAuthorsWithContributors, a -> not member (":", characters a));
+    bibPackageAuthors := wrapTexStrings (demark (" and ", packageAuthors));
+    if packageAuthors === {}
+        then  print concatenate ("Warning: The \"", T, "\" package provides insufficient citation data: author.")
+    else null;
+    -- set up bibtex string for certified packages
+    bibtexCert := if certificationInfo === null then null else
+        (bibYear := substring ((regex ("[[:digit:]]{4}", certificationInfo#"acceptance date"))#0, certificationInfo#"acceptance date");
+        certTitle := quotesToTex (wrapTexStrings (certificationInfo#"article title"));
+        concatenate (
+            "\n",
+            "@article{", T, "Article,\n",
+                concatenate ("  title = {{", certTitle, "}},\n"),
+                concatenate ("  author = {", bibPackageAuthors, "},\n"), -- authors
+                concatenate ("  journal = {", certificationInfo#"journal name", "},\n"),
+                concatenate ("  volume = {", certificationInfo#"volume number", "},\n"),
+                concatenate ("  year = {",  bibYear, "},\n"),
+            "}\n")
+        );
+    -- set up bibtex string for package source
     -- title
     -- bibtex title content: name of package followed either by a good headline or "A Macaulay2 package"
     bibPackageTitle :=  if hasGoodHeadline P
-        then concatenate ("{", T, ": ", replace(" Macaulay2 ", " \\emph{Macaulay2} ", P#Options#Headline), "}")
-        else concatenate ("{", T, ": A \\emph{Macaulay2} package}");
+        then concatenate ("{", T, ": ", headlineToTex P, ". ", V, "}")
+        else concatenate ("{", T, ": A \\emph{Macaulay2} package. ", V, "}");
     -- bibtex howpublished content
     bibPackageSource :=
         if isInternalPackage and isInternalSource
@@ -117,23 +182,23 @@ cite Package := P -> (
         else if isInternalPackage and not isInternalSource
             then if P#Options#HomePage =!= null
                 then concatenate("\"", toString (P#Options#HomePage), "\"")
-            else "\"\\url{https://github.com/Macaulay2/M2/tree/master/M2/Macaulay2/packages}\""
+            else "\\url{https://github.com/Macaulay2/M2/tree/master/M2/Macaulay2/packages}"
         else if P#Options#HomePage === null
-            then (print concatenate ("Package \"", T, "\" provides insufficient citation data"), null)
+            then (print concatenate ("Warning: The \"", T, "\" package provides insufficient citation data: howpublished."))
         else concatenate("\\url{" ,toString (P#Options#HomePage), "}");
     bibtexString :=
         concatenate (
-            "@misc{", T, ",\n",
+            "@misc{", T, "Source,\n",
                 concatenate ("  title = {", bibPackageTitle, "},\n"),
                 concatenate ("  author = {", bibPackageAuthors, "},\n"),
                 concatenate ("  howpublished = {Available at ", bibPackageSource, "}\n"),
-            "}\n"
-            );
-    bibtexString
+            "}\n",
+            bibtexCert);
+    bibtexString        
     )
 
 
-cite String := S -> (
+iCite String := S -> (
     if S === "M2" then return (
         concatenate (
             "@misc{M2,\n",
@@ -142,14 +207,13 @@ cite String := S -> (
             "  howpublished = {Available at ", ///\///, "url{http://www.math.uiuc.edu/Macaulay2/}}\n",
             "}\n",
             ))
-    else P := loadPackage (S, Reload => true);
-    return cite P)  
+    else 
+        L := select (1, loadedPackages, p -> toString p === S);
+        P := if #L === 1 then L#0 else loadPackage S;
+    return iCite P)
 
-cite Symbol := S -> (
-    cite toString (S))
-
-cite List := L -> scan (L, P -> cite P)
-
+-- THE CITE COMMAND
+cite = new Command from (T -> if T === () then iCite "M2" else iCite T)
 
 ------------------------
 -- End of source code --
@@ -166,15 +230,32 @@ doc ///
         a package facilitating citation of Macaulay2 packages
     Description
         Text
-            This is a modest package with lofty goals. It is modest because it is a package for a powerful open-source mathematical software suite but it contains only one method and adds exactly zero computational ability to the platform. The one method, called @TO cite@, can be called on any @HREF {"http://www.math.uiuc.edu/Macaulay2/", "Macaulay2"}@ package and will return a bibtex citation for inclusion in a @HREF {"https://www.latex-project.org", "LaTeX"}@ document. For example, a citation for this package can be obtained as follows.
+          This is a modest package with lofty goals. It is modest because it 
+          is a package for a powerful open-source mathematical software suite 
+          but it contains only one method and adds exactly zero computational 
+          ability to the platform. The one method, called @TO cite@, can be 
+          called on any @HREF {"http://www.math.uiuc.edu/Macaulay2/", 
+          "Macaulay2"}@ package and will return a bibtex citation for 
+          inclusion in a @HREF {"https://www.latex-project.org", "LaTeX"}@ 
+          document. For example, a citation for this package can be obtained 
+          as follows.
         Example
-            cite PackageCitations    
+            cite "PackageCitations"
         Text
-            The inner workings of @TO cite@ are explained on the @TO2 {cite, "documentation page"}@ so we won't give any details here except to point out that the preferred citation for Macaulay2 can also be obtained with ease.
+            The inner workings of @TO cite@ are explained on the @TO2 {cite, 
+            "documentation page"}@ so we won't give any details here except to 
+            point out that the preferred citation for Macaulay2 can also be 
+            obtained with ease.
         Example
-            cite M2        
+            cite        
         Text    
-            The initial benefit of having a fast and facile mechanism for citing packages should be that more users of the software will include citations in their work. This, of course, will benefit the community in a number of ways. First it will recognize the hard work of the coders in the Macaulay2 community and second it will serve as valuable promotion for the platform and encourage new users and coders to join the community. 
+            The initial benefit of having a fast and facile mechanism for 
+            citing packages should be that more users of the software will 
+            include citations in their work. This, of course, will benefit the 
+            community in a number of ways. First it will recognize the hard 
+            work of the coders in the Macaulay2 community and second it will 
+            serve as valuable promotion for the platform and encourage new 
+            users and coders to join the community. 
     SeeAlso
         cite
 ///
@@ -182,25 +263,47 @@ doc ///
 doc ///
     Key
         cite
-        (cite, Package)
-        (cite, String)
-        (cite, Symbol)
-        (cite, List)
     Headline
         obtain bibtex citations for Macaulay2 packages
     Usage
-        cite (X)
+        cite
+        cite P
+        cite S
     Inputs
-        X:Thing
-            either a @TO2 {"packages provided with Macaulay2", "package"}@, a @TO2 {String, "string"}@, a @TO2 {Symbol, "symbol"}@, or a @TO2 {List, "list"}@ of these
-    Outputs
+        P:Package
         S:String
+    Outputs
+        T:String
             bibtex entry or entries
     Description
         Text
-            When applied to a loaded package or a list of loaded packages, @TO cite@ returns a bibtex citation for inclusion in a LaTeX document, assuming there is enough information included in the package to build it. The method may somethimes work for unloaded packages, though results vary. The user is strongly encouraged to confirm all data included in a citation. 
+            When called without an argument, @TO cite@ produces the desired reference to Macaulay2.
+        Example
+            cite    
+        Text
+            When applied to a loaded package @TO cite@ returns a bibtex 
+            citation for inclusion in a LaTeX document, assuming there is 
+            enough information included in the package to build it. Compare the following.
         Example
             cite PackageCitations
+            cite Text
+        Text
+            If @TO cite@ is given a string, then it will will load the package 
+            if necessary and issue the corresponding citation. Note that if 
+            the package is @TO2 {Certification, "certified"}@ then two bibtex 
+            entries will be produced: one for the article witnessing the 
+            certification and one for the source code. Moreover, if the 
+            headline of a package does not meet a certain set of criteria then 
+            a more generic title containing  "A Macaulay2 package" is 
+            produced. For example, the package PieriMaps is a certified 
+            Macaulay2 package whose headline is deemed too long by the @TO 
+            cite@ method.
+        Example
+            cite "PieriMaps"
+        Text
+            No effort is made to correct apparent typos in the package data. The user is urged to check for correct spelling and grammar.
+      Example
+          cite "Bruns"
     SeeAlso
         PackageCitations
 ///
@@ -211,13 +314,6 @@ doc ///
 end
 
 restart
-uninstallPackage "PackageCitations"
-installPackage ("PackageCitations", RemakeAllDocumentation => true)
-cite Dmodules
-cite EdgeIdeals
-cite PackageCitations
-cite Graphs
-
-loadPackage ("PackageCitations", Reload => true)
-cite M2
-viewHelp PackageCitations
+uninstallPackage (PackageCitations)
+installPackage (PackageCitations)
+viewHelp cite
