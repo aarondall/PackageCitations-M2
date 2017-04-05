@@ -10,6 +10,8 @@
 # PackageCitations-M2
 a Macaulay2 software package for obtaining bibtex entries for Macaulay2 packages
 
+The following is, as of 2015 04 05, slightly outdated. A new `README` will be ready in short order.
+
 <a name="functionality"></a>
 ## Functionality ##
 The `PackageCitations` package has precisely one method: `cite`. For a Macaulay2 package `P`, calling `cite P` produces a string that can be copied into a bibtex bibliography. If the package `P` is `certified` then the result is a reference to the journal article certifying `P`. For example, the `Binomials` package is certified and calling `cite` on it yields the following:
@@ -70,6 +72,7 @@ Note that we didn't need to wrap `PackageCitations` in quotes when we called `ci
 ## Advice for package creators ##
 
 Here we offer some guidelines so that the `cite` method will work out of the box with an (uncertified) package "Foo". Let's look at a typical OptionTable for a package and define some nomenclature.
+
     newPackage (
         "Foo", -- the name of your package in upper CamelCase
         Version => "0.1", -- the version of your package
