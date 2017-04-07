@@ -24,15 +24,18 @@
 --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 --
---  Release 0.1 (2017 04)
+--  Release 0.1 (2017 03)
 --      NEW:
 --          A method for obtaining a bibtex citation for a Macaulay2 package.
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 newPackage (
     "PackageCitations",
     Version => "0.1", 
-    Date => "2017 04 05",
-    Authors => {{Name => "Aaron Dall", Email => "aaronmdall -at- gmail.com", HomePage => "https://www.aarondall.com"}},
+    Date => "2017 03 28",
+    Authors => {{
+        Name => "Aaron Dall", 
+        Email => "aaronmdall -at- gmail.com", 
+        HomePage => "https://www.aarondall.com"}},
     Headline => "A Macaulay2 software package facilitating citation of Macaulay2 packages",
     DebuggingMode => true,
     HomePage => "https://github.com/aarondall/PackageCitations-M2"
@@ -51,6 +54,7 @@ export {
 -- note that the length of a diacritic (as a string in M2) is 2
 texStore = hashTable {
     ///Macaulay2///     => ///\emph{Macaulay2}///,
+    ///Macaulay 2///     => ///\emph{Macaulay2}///,
     ///Mbar_\{g,n\}///    => ///$Mbar_{g,n}$///,
     ///á///             => ///{\'a}///,
     ///å///             => ///{\aa}///,
@@ -63,8 +67,9 @@ texStore = hashTable {
 
 -- PREPARE THE HEADLINE FOR USE IN THE BIBTEX TITLE
 
--- an internal method for checking if a package headline is a good candidate for use in the citation title
--- a good package headline satisfies the following conditions
+-- An internal method for checking if a package headline is a good 
+-- candidate for use in the citation title.
+-- A good package headline satisfies the following conditions
 --  (1) is n words with 0 < n <= 10,
 --  (2) is not a repeat of the title, and
 --  (3) does not contain a colon
@@ -82,7 +87,8 @@ hasGoodHeadline Package := P -> (
     if T === H then return false else
     -- then list each word of headline with first letter removed
     reducedHeadline := apply (L, w -> substring (w, 1, #w));
-    -- list each word (starting with an upper case letter) of title with first letter removed
+    -- list each word (starting with an upper case letter) of title 
+    -- with first letter removed
     reducedTitle := delete("" ,separate(" ", replace ("[[:upper:]]", " ", T)));
     -- compare reducedTitle and reducedHeadline
     if #reducedHeadline == #reducedTitle and all (
@@ -137,7 +143,7 @@ headlineToTex Package := P -> (
     repairQuotesH
     )
 
--- THE ICITE METHOD --
+-- the cite method
 iCite = method (TypicalValue => String)
 iCite Package := P -> (
     T := P#"title"; -- package title
@@ -212,7 +218,7 @@ iCite String := S -> (
         P := if #L === 1 then L#0 else loadPackage S;
     return iCite P)
 
--- THE CITE COMMAND
+-- The cite command
 cite = new Command from (T -> if T === () then iCite "M2" else iCite T)
 
 ------------------------
@@ -307,7 +313,6 @@ doc ///
     SeeAlso
         PackageCitations
 ///
-
 -- End exported documentation --
 -- Begin Tests --
 -- End Tests --
