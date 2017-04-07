@@ -283,13 +283,15 @@ doc ///
             bibtex entry or entries
     Description
         Text
-            When called without an argument, @TO cite@ produces the desired reference to Macaulay2.
+            When called without an argument, @TO cite@ produces the desired 
+            reference to Macaulay2.
         Example
             cite    
         Text
             When applied to a loaded package @TO cite@ returns a bibtex 
             citation for inclusion in a LaTeX document, assuming there is 
-            enough information included in the package to build it. Compare the following.
+            enough information included in the package to build it. Compare the 
+            following.
         Example
             cite PackageCitations
             cite Text
@@ -307,7 +309,8 @@ doc ///
         Example
             cite "PieriMaps"
         Text
-            No effort is made to correct apparent typos in the package data. The user is urged to check for correct spelling and grammar.
+            No effort is made to correct apparent typos in the package data. The 
+            user is urged to check for correct spelling and grammar.
       Example
           cite "Bruns"
     SeeAlso
