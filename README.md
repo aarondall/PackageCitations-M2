@@ -1,17 +1,16 @@
-   * [PackageCitations-M2](#packagecitations-m2)
-      * [Functionality](#functionality)
-         * [Citing Macaulay2](#citing-macaulay2)
-         * [Citing a loaded package](#citing-a-loaded-package)
-         * [Citing unloaded packages](#citing-unloaded-packages)
-      * [Advice for package creators](#advice-for-package-creators)
-         * [Titles in CamelCase](#titles-in-camelcase)
-         * [Headlines: Short and Descriptive](#headlines-short-and-descriptive)
-         * [Authors](#authors)
-         * [Package HomePage](#package-homepage)
-
 <a name="packagecitations-m2"></a>
 # PackageCitations-M2
-a Macaulay2 software package for obtaining bibtex entries for Macaulay2 packages
+A [Macaulay2][M2] software package for obtaining [bibtex][bib] entries of Macaulay2 packages for inclusion in [LaTeX][latex] documents.
+
+	* [Functionality](#functionality)
+	   * [Citing Macaulay2](#citing-macaulay2)
+	   * [Citing a loaded package](#citing-a-loaded-package)
+	   * [Citing unloaded packages](#citing-unloaded-packages)
+	* [Advice for package creators](#advice-for-package-creators)
+	   * [Titles in CamelCase](#titles-in-camelcase)
+	   * [Headlines: Short and Descriptive](#headlines-short-and-descriptive)
+	   * [Authors](#authors)
+	   * [Package HomePage](#package-homepage)
 
 <a name="functionality"></a>
 ## Functionality ##
@@ -132,3 +131,6 @@ Packages sometimes have "main" authors and "contributing" authors. Only include 
 
 For packages distributed with Macaulay2, a link to the [GitHub repository](https://github.com/Macaulay2/M2/tree/master/M2/Macaulay2/packages) is given. Authors of an external package should always include a `url` for the current source code of their package.
 
+[M2]: https://github.com/Macaulay2/M2
+[bib]: http://www.bibtex.org
+[latex]: https://www.latex-project.org
