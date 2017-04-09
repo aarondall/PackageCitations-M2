@@ -2,15 +2,15 @@
 # PackageCitations-M2
 A [Macaulay2][M2] software package for obtaining [bibtex][bib] entries of Macaulay2 packages for inclusion in [LaTeX][latex] documents.
 
-	* [Functionality](#functionality)
-	   * [Citing Macaulay2](#citing-macaulay2)
-	   * [Citing a loaded package](#citing-a-loaded-package)
-	   * [Citing unloaded packages](#citing-unloaded-packages)
-	* [Advice for package creators](#advice-for-package-creators)
-	   * [Titles in CamelCase](#titles-in-camelcase)
-	   * [Headlines: Short and Descriptive](#headlines-short-and-descriptive)
-	   * [Authors](#authors)
-	   * [Package HomePage](#package-homepage)
+* [Functionality](#functionality)
+	* [Citing Macaulay2](#citing-macaulay2)
+	* [Citing a loaded package](#citing-a-loaded-package)
+	* [Citing unloaded packages](#citing-unloaded-packages)
+* [Advice for package creators](#advice-for-package-creators)
+	* [Titles in CamelCase](#titles-in-camelcase)
+	* [Headlines: Short and Descriptive](#headlines-short-and-descriptive)
+	* [Authors](#authors)
+	* [Package HomePage](#package-homepage)
 
 <a name="functionality"></a>
 ## Functionality ##
